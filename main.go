@@ -1,10 +1,33 @@
 package main
 
-func main() {
-	sts := parseSettings("some path will be here")
-	for _, s := range sts.http {
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"sync"
+)
 
+func main() {
+	var wg sync.WaitGroup
+
+	sts := parseSettings("some path will be here")
+
+	for _, frontend := range sts.http {
+		mux := http.NewServeMux()
+		mux.HandleFunc(frontend.path, func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println("Handled!")
+		})
+
+		listenTo := fmt.Sprintf(":%v", frontend.port)
+
+		wg.Add(1)
+		go func() {
+			if err := http.ListenAndServe(listenTo, mux); err != nil {
+				log.Fatal(err)
+			}
+		}()
 	}
+	wg.Wait()
 }
 
 // // Lets run the frontned

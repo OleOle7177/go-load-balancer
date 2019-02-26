@@ -1,13 +1,13 @@
 package main
 
 type settings struct {
-	http []httpProxy
+	http []*httpProxy
 }
 
 type httpProxy struct {
-	host     string
-	port     string
-	backends []httpBackend
+	port     int
+	path     string
+	backends []*httpBackend
 }
 
 type httpBackend struct {
@@ -16,7 +16,19 @@ type httpBackend struct {
 }
 
 func parseSettings(path string) *settings {
-	return &settings{http: []httpProxy{}}
+	return &settings{http: []*httpProxy{
+		&httpProxy{
+			port:     5000,
+			path:     "/",
+			backends: []*httpBackend{&httpBackend{weight: 1, proxyTo: "http://sports.ru"}},
+		},
+		&httpProxy{
+			port:     5005,
+			path:     "/s",
+			backends: []*httpBackend{&httpBackend{weight: 1, proxyTo: "http://sports.ru"}},
+		},
+	},
+	}
 }
 
 // http:
