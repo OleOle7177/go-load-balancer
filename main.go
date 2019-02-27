@@ -64,7 +64,7 @@ func main() {
 // 		select {
 // 		case result := <-chanResponse:
 // 			// We have a response, it's valid ?
-// 			for k, vv := range result.Header {
+// 			for k, vv := range.Header {
 // 				for _, v := range vv {
 // 					w.Header().Set(k, v)
 // 				}

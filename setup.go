@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -31,6 +32,14 @@ func (h *httpProxy) launchServer() {
 
 		if val, ok := h.servers[r.Host]; ok {
 			fmt.Printf("should proxy to %s\n", val.name)
+
+			/// do request
+			client := &http.Client{}
+			req, _ := http.NewRequest("GET", val.backends[0].proxyTo, nil)
+			resp, _ := client.Do(req)
+			body, _ := ioutil.ReadAll(resp.Body)
+			w.Write(body)
+			////
 
 		} else {
 			fmt.Println("No proxy for this host header")
