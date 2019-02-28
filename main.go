@@ -1,113 +1,30 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"sync"
 )
 
 func main() {
 	var wg sync.WaitGroup
 
-	sts := parseSettings("some path will be here")
+	yaml, err := ioutil.ReadFile("./config.yaml")
+	if err != nil {
+		fmt.Printf("Error while reading config: %s\n", err)
+	}
 
-	for _, frontend := range sts.http {
+	sts, err := parseConfig([]byte(yaml))
+	if err != nil {
+		fmt.Printf("Error while parsing config: %s\n", err)
+	}
+
+	h := sts.createHTTPProxy()
+
+	for _, frontend := range h.http {
 		frontend.launchServer()
 		wg.Add(1)
 	}
 
 	wg.Wait()
 }
-
-// // Lets run the frontned
-// func (s *Server) RunFrontendServer(frontend *Frontend) {
-// 	if len(frontend.Backends) == 0 {
-// 		log.Fatal(errNoBackend.Error())
-// 	}
-//
-// 	host := frontend.Host
-// 	port := frontend.Port
-// 	address := fmt.Sprintf("%s:%d", host, port)
-//
-// 	for _, backend := range frontend.Backends {
-// 		// Before start the backend let's set a monitor
-// 		backend.HeartCheck()
-// 	}
-//
-// 	log.Printf("Run frontend server [%s] at [%s]", frontend.Name, address)
-//
-// 	// Prepare the mux
-// 	httpHandle := http.NewServeMux()
-//
-// 	httpHandle.HandleFunc(frontend.Route, func(w http.ResponseWriter, r *http.Request) {
-// 		s.Lock()
-// 		s.Add(1)
-// 		s.Unlock()
-//
-// 		// On a serious problem
-// 		defer func() {
-// 			if rec := recover(); rec != nil {
-// 				log.Println("Err", rec)
-// 				http.Error(w, http.StatusText(http.StatusInternalServerError),
-// 					http.StatusInternalServerError)
-// 			}
-// 		}()
-//
-// 		// Get a channel the already attached to a worker
-// 		chanResponse := s.Get(r, frontend)
-// 		defer close(chanResponse)
-//
-// 		r.Close = true
-//
-// 		// Timeout ticker
-// 		ticker := time.NewTicker(frontend.Timeout)
-// 		defer ticker.Stop()
-//
-// 		select {
-// 		case result := <-chanResponse:
-// 			// We have a response, it's valid ?
-// 			for k, vv := range.Header {
-// 				for _, v := range vv {
-// 					w.Header().Set(k, v)
-// 				}
-// 			}
-//
-// 			s.Lock()
-// 			s.Done()
-// 			s.Unlock()
-//
-// 			if result.Upgraded {
-// 				if s.Configuration.GeneralConfig.Websocket {
-// 					result.HijackWebSocket(w, r)
-// 				}
-// 			} else {
-// 				w.WriteHeader(result.Status)
-//
-// 				if r.Method != "HEAD" {
-// 					w.Write(result.Body)
-// 				}
-// 			}
-// 		case <-r.Cancel:
-// 			s.Lock()
-// 			s.Done()
-// 			s.Unlock()
-//
-// 		case <-ticker.C:
-// 			s.Lock()
-// 			s.Done()
-// 			s.Unlock()
-//
-// 			// Timeout
-// 			http.Error(w, errTimeout.Error(), http.StatusRequestTimeout)
-// 		}
-// 	})
-//
-// 	// Config and start server
-// 	server := &http.Server{
-// 		Addr:    address,
-// 		Handler: httpHandle,
-// 	}
-//
-// 	err := server.ListenAndServe()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }

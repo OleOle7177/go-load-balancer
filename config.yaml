@@ -1,0 +1,26 @@
+---
+http:
+  - port: 5000
+    servers:
+      - name: "sports"
+        host: "sports.ru"
+        timeout: 5
+        backends:
+          - weight: 1
+            proxyTo: "http://sports.ru"
+          - weight: 2
+            proxyTo: "http://geeksforgeeks.org"
+      - name: "yandex"
+        host: "yandex.ru"
+        timeout: 2
+        backends:
+          - weight: 1
+            proxyTo: "http://sports.ru"
+  - port: 5005
+    servers:
+      - name: "vc"
+        host: "vc.ru"
+        timeout: 30
+        backends:
+          - weight: 1
+            proxyTo: "http://vc.ru"
