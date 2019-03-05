@@ -50,14 +50,12 @@ func createServersMap(sts []*stsHTTPServer) map[string]*httpServer {
 	return srvMap
 }
 
-// TODO: use real heap with push and pop
-func createBackendHeap(bs []*stsHTTPBackend) []*httpBackend {
-	res := []*httpBackend{}
-	for _, val := range bs {
-		res = append(res, &httpBackend{weight: val.Weight, proxyTo: val.ProxyTo})
+func createBackendHeap(bs []*stsHTTPBackend) *backendHeap {
+	heap := new(backendHeap)
+	for _, b := range bs {
+		heap.Push(&httpBackend{weight: b.Weight, proxyTo: b.ProxyTo})
 	}
-
-	return res
+	return heap
 }
 
 func parseConfig(data []byte) (*stsLoadBalancer, error) {

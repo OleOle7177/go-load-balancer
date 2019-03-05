@@ -20,7 +20,7 @@ type httpProxy struct {
 type httpServer struct {
 	name     string
 	client   *http.Client
-	backends []*httpBackend
+	backends *backendHeap
 }
 
 type httpBackend struct {
@@ -33,18 +33,31 @@ func (h *httpProxy) launchServer() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		if val, ok := h.servers[r.Host]; ok {
-			fmt.Printf("should proxy to %s\n", val.name)
+			// fmt.Printf("should proxy to %s\n", val.name)
 
-			fmt.Println(val.backends[0].proxyTo)
-			req, _ := http.NewRequest(r.Method, val.backends[0].proxyTo, r.Body)
-			resp, _ := val.client.Do(req)
-			body, _ := ioutil.ReadAll(resp.Body)
+			b := val.backends.Pop()
+			defer val.backends.Push(b)
+			fmt.Println(b.proxyTo)
+			req, _ := http.NewRequest(r.Method, b.proxyTo, r.Body)
+			req.Host = r.Host
+			req.Header.Set("User-Agent", r.UserAgent())
+			req.Header.Set("X-Forwarded-For", r.Referer())
+
+			resp, err := val.client.Do(req)
+			time.Sleep(5 * time.Second)
+			if err != nil {
+				http.Error(w, "Internal Server Error", 500)
+			}
+			body, err := ioutil.ReadAll(resp.Body)
+			defer resp.Body.Close()
+
+			if err != nil {
+				http.Error(w, "Internal Server Error", 500)
+			}
 			w.Write(body)
-
 		} else {
 			fmt.Println("No proxy for this host header")
 		}
-
 	})
 
 	listenTo := fmt.Sprintf(":%v", h.port)
