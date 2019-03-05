@@ -41,21 +41,21 @@ func createServersMap(sts []*stsHTTPServer) map[string]*httpServer {
 	srvMap := make(map[string]*httpServer)
 	for _, val := range sts {
 		srvMap[val.Host] = &httpServer{
-			client:   createHTTPClient(val.Timeout),
-			name:     val.Name,
-			backends: createBackendHeap(val.Backends),
+			client: createHTTPClient(val.Timeout),
+			name:   val.Name,
+			pool:   createBackendHeap(val.Backends),
 		}
 	}
 
 	return srvMap
 }
 
-func createBackendHeap(bs []*stsHTTPBackend) *backendHeap {
+func createBackendHeap(bs []*stsHTTPBackend) *httpBackendPool {
 	heap := new(backendHeap)
 	for _, b := range bs {
 		heap.Push(&httpBackend{weight: b.Weight, proxyTo: b.ProxyTo})
 	}
-	return heap
+	return &httpBackendPool{backends: heap}
 }
 
 func parseConfig(data []byte) (*stsLoadBalancer, error) {

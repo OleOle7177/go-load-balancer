@@ -14,7 +14,7 @@ func (b *backendHeap) Push(x *httpBackend) {
 
 func (b *backendHeap) Pop() (*httpBackend, error) {
 	if len(*b) == 0 {
-		return nil, errors.New("no elements in heap")
+		return nil, errors.New("empty heap error")
 	}
 	old := *b
 	n := len(old)

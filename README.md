@@ -12,7 +12,6 @@ place configs in config.yaml
 ```curl -XGET 127.0.0.1:5000 -H "Host: header-from-yaml"```
 
 <b>Further work:</b>
- - use heap to prioritize proxy backends
  - tests for config parse
  - read config path from flag
  - tests for proxy requests

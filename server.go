@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -18,9 +19,14 @@ type httpProxy struct {
 }
 
 type httpServer struct {
-	name     string
-	client   *http.Client
+	name   string
+	client *http.Client
+	pool   *httpBackendPool
+}
+
+type httpBackendPool struct {
 	backends *backendHeap
+	mux      sync.Mutex
 }
 
 type httpBackend struct {
@@ -33,15 +39,18 @@ func (h *httpProxy) launchServer() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		if val, ok := h.servers[r.Host]; ok {
-			b, err := val.backends.Pop()
+			val.pool.mux.Lock()
+			defer val.pool.mux.Unlock()
+
+			b, err := val.pool.backends.Pop()
 			if err != nil {
 				for err != nil {
 					time.Sleep(10 * time.Millisecond)
-					b, err = val.backends.Pop()
+					b, err = val.pool.backends.Pop()
 				}
 			}
 
-			defer val.backends.Push(b)
+			defer val.pool.backends.Push(b)
 			fmt.Println(b.proxyTo)
 			req, _ := http.NewRequest(r.Method, b.proxyTo, r.Body)
 			req.Host = r.Host
