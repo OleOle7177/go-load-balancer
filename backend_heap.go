@@ -1,5 +1,7 @@
 package main
 
+import "errors"
+
 type backendHeap []*httpBackend
 
 func (b backendHeap) Len() int           { return len(b) }
@@ -10,12 +12,13 @@ func (b *backendHeap) Push(x *httpBackend) {
 	*b = append(*b, x)
 }
 
-// Add timeout if no backends in heap given
-
-func (b *backendHeap) Pop() *httpBackend {
+func (b *backendHeap) Pop() (*httpBackend, error) {
+	if len(*b) == 0 {
+		return nil, errors.New("no elements in heap")
+	}
 	old := *b
 	n := len(old)
 	x := old[n-1]
 	*b = old[0 : n-1]
-	return x
+	return x, nil
 }

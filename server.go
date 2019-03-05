@@ -33,9 +33,14 @@ func (h *httpProxy) launchServer() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		if val, ok := h.servers[r.Host]; ok {
-			// fmt.Printf("should proxy to %s\n", val.name)
+			b, err := val.backends.Pop()
+			if err != nil {
+				for err != nil {
+					time.Sleep(10 * time.Millisecond)
+					b, err = val.backends.Pop()
+				}
+			}
 
-			b := val.backends.Pop()
 			defer val.backends.Push(b)
 			fmt.Println(b.proxyTo)
 			req, _ := http.NewRequest(r.Method, b.proxyTo, r.Body)
@@ -44,7 +49,6 @@ func (h *httpProxy) launchServer() {
 			req.Header.Set("X-Forwarded-For", r.Referer())
 
 			resp, err := val.client.Do(req)
-			time.Sleep(5 * time.Second)
 			if err != nil {
 				http.Error(w, "Internal Server Error", 500)
 			}
@@ -54,6 +58,7 @@ func (h *httpProxy) launchServer() {
 			if err != nil {
 				http.Error(w, "Internal Server Error", 500)
 			}
+
 			w.Write(body)
 		} else {
 			fmt.Println("No proxy for this host header")
