@@ -19,9 +19,10 @@ type httpProxy struct {
 }
 
 type httpServer struct {
-	name   string
-	client *http.Client
-	pool   *httpBackendPool
+	name        string
+	client      *http.Client
+	pool        *httpBackendPool
+	poolCounter chan (struct{})
 }
 
 type httpBackendPool struct {
@@ -39,18 +40,16 @@ func (h *httpProxy) launchServer() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		if val, ok := h.servers[r.Host]; ok {
+			// check if there are available connections in pool
+			val.poolCounter <- struct{}{}
+			defer func() { <-val.poolCounter }()
+
+			// lock backend heap
 			val.pool.mux.Lock()
 			defer val.pool.mux.Unlock()
-
-			b, err := val.pool.backends.Pop()
-			if err != nil {
-				for err != nil {
-					time.Sleep(10 * time.Millisecond)
-					b, err = val.pool.backends.Pop()
-				}
-			}
-
+			b, _ := val.pool.backends.Pop()
 			defer val.pool.backends.Push(b)
+
 			fmt.Println(b.proxyTo)
 			req, _ := http.NewRequest(r.Method, b.proxyTo, r.Body)
 			req.Host = r.Host

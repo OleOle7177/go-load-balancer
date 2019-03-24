@@ -12,7 +12,7 @@ http:
             proxyTo: "http://geeksforgeeks.org"
       - name: "yandex"
         host: "yandex.ru"
-        timeout: 2
+        timeout: 3
         backends:
           - weight: 1
             proxyTo: "http://sports.ru"
@@ -20,7 +20,7 @@ http:
     servers:
       - name: "vc"
         host: "vc.ru"
-        timeout: 30
+        timeout: 3
         backends:
           - weight: 1
             proxyTo: "http://vc.ru"

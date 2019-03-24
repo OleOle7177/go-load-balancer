@@ -41,9 +41,10 @@ func createServersMap(sts []*stsHTTPServer) map[string]*httpServer {
 	srvMap := make(map[string]*httpServer)
 	for _, val := range sts {
 		srvMap[val.Host] = &httpServer{
-			client: createHTTPClient(val.Timeout),
-			name:   val.Name,
-			pool:   createBackendHeap(val.Backends),
+			client:      createHTTPClient(val.Timeout),
+			name:        val.Name,
+			pool:        createBackendHeap(val.Backends),
+			poolCounter: make(chan struct{}, len(val.Backends)),
 		}
 	}
 

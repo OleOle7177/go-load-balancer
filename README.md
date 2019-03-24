@@ -9,7 +9,7 @@
 place configs in config.yaml
 
 <b>Test:</b>
-```curl -XGET 127.0.0.1:5000 -H "Host: header-from-yaml"```
+`curl -XGET 127.0.0.1:5000 -H "Host: header-from-yaml"`
 
 <b>Further work:</b>
  - tests for config parse
@@ -17,3 +17,4 @@ place configs in config.yaml
  - tests for proxy requests
  - log requests
  - log errors
+ - add active healthchecks
